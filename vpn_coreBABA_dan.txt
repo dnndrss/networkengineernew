@@ -1,0 +1,18 @@
+CREATE USERNAME/PASSWORD AUTH
+conf t
+ username admin privilege 15 secret pass
+ line vty 0 14
+ login local
+
+
+TASK 12: SSH: SECURE SHELL VERSION 2
+Encryption:
+VPN tunnel: 1encryption 2hashing 3tunneling
+
+sshEncryption: Notunnel/hashing:
+coreBABA:
+conf t
+ip domain-name rivanit.com
+crypto key generate rsa
+!512-->panget (!1024!)
+ip ssh version 2s

@@ -1,0 +1,417 @@
+EX1 BLOCK 3 K:
+conf t
+ no access-list 1
+ access-list 1 deny 10.11.0.0 0.0.255.255
+ access-list 1 deny 10.12.0.0 0.0.255.255
+ access-list 1 deny 10.21.0.0 0.0.255.255
+ access-list 1 perm any
+ int gi 0/0/1
+ ip access-group 1 in
+
+do sh ip access-list 1
+
+UNLOCK
+conf t
+int gi 0/0/1
+no ip access-group 1 in
+do sh ip access-list 1
+
+
+
+conf t
+ no access-list 2
+ access-list 2 deny 10.21.0.0 0.0.255.255
+ access-list 2 deny 10.32.0.0 0.0.255.255
+ access-list 2 deny 10.42.0.0 0.0.255.255
+ access-list 2 perm any
+ int gi 0/0/1
+ ip access-group 2 in
+ do sh ip access-list 2
+
+conf t
+ int gi 0/0/1
+ no ip access-group 2 in
+ do sh ip access-list 2
+
+
+
+
+conf t
+ no access-list 4
+ access-list 4 
+ access-list 4 deny any
+ int gi 0/0/1
+ ip access-group 3 in
+ do sh ip access-list 3
+
+option to number 3
+
+conf t
+ no access-list 4
+ access-list 4 permit 10.21.0.0 0.0.255.255
+ access-list 4 deny any
+ int gi 0/0/1
+ ip access-group 4 in
+ do sh ip access-list 4
+
+ int gi 0/0/1
+ no ip access-group 4 in
+ do sh ip access-list 4
+
+
+
+
+conf t
+ no access-list 5
+ access-list 5 permit 10.11.0.0 0.0.255.255
+ access-list 5 deny any
+ int gi 0/0/1
+ ip access-group 5 in
+ do sh ip access-list 5
+
+
+conf t
+ int gi 0/0/1
+ no ip access-group 5 in
+ do sh ip access-list 5
+
+
+
+
+
+
+
+
+
+config t
+int fa 0/0
+ ip add 10.22.100.9 255.255.255.0 Secondary
+service finger
+service tcp-small-servers
+service udp-small-servers
+ip dns server
+ip http server
+ip http secure-server
+!Make Ping EASY
+ip host pc 10.22.1.10
+ip host cm 10.22.100.8
+ip host cm2 10.22.100.9
+ip host p1 10.22.100.101
+ip host p2 10.22.100.102
+ip host sw 10.22.1.4
+ip host ed 10.22.22.1
+
+
+
+
+
+
+
+!basic fw formula:
+conf t
+ no access-list 100
+ access-list 100 permit tcp any host cm eq 80
+ access-list 100 permit tcp any host cm eq 443
+ access-list 100 permit tcp any host cm2 eq 22
+ access-list 100 permit tcp any host cm2 eq 53
+ int fa 0/0
+ ip access-group 100 in
+ do sh ip access-list 100
+
+!!open list
+conf t
+ int fa 0/0
+ no ip access-group 100 in
+ do sh ip access-list 100
+
+
+nmap -Pnv cm
+
+
+
+
+!firewall policy 101
+cm ssh, telnet, domain
+cm2 http, https
+
+conf t
+ no access-list 101
+ access-list 101 permit tcp any host cm eq 2000
+ access-list 101 permit tcp any host cm eq 23
+ access-list 101 permit tcp any host cm eq 53
+ access-list 101 permit tcp any host cm2 eq 80
+ access-list 101 permit tcp any host cm2 eq 443
+ int fa 0/0
+ ip access-group 101 in
+ do sh ip access-list 101
+
+!!open list
+conf t
+ int fa 0/0
+ no ip access-group 101 in
+ do sh ip access-list 101
+
+
+
+!firewall policy 103
+!cm telnet, http, dns
+!cm2 ssh, https, telnet, sccp
+conf t
+ no access-list 103
+ access-list 103 permit tcp any host cm eq 23
+ access-list 103 permit tcp any host cm eq 80
+ access-list 103 permit tcp any host cm eq 53
+ access-list 103 permit tcp any host cm2 eq 22
+ access-list 103 permit tcp any host cm2 eq 443
+ access-list 103 permit tcp any host cm2 eq 23
+ access-list 103 permit tcp any host cm2 eq 2000
+ int fa 0/0
+ ip access-group 103 in
+ do sh ip access-list 103
+
+conf t
+ int fa 0/0
+ no ip access-group 104 in
+ do sh ip access-list 104
+
+
+!policy 104
+cm ping, telnet, ssh, https
+cm2 daytime, chargen, finger, domain
+conf t
+ no access-list 104
+ access-list 104 permit icmp any host cm
+ access-list 104 permit tcp any host cm eq 23
+ access-list 104 permit tcp any host cm eq 22
+ access-list 104 permit tcp any host cm eq 443
+ access-list 104 permit tcp any host cm2 eq 13
+ access-list 104 permit tcp any host cm2 eq 19
+ access-list 104 permit tcp any host cm2 eq 79
+ access-list 104 permit tcp any host cm2 eq 53
+ int fa 0/0
+ ip access-group 104 in
+ do sh ip access-list 104
+
+conf t
+ int fa 0/0
+ no ip access-group 104 in
+ do sh ip access-list 104
+
+
+!policy 105
+cm domain, ssh, web
+cm2 ping, telnet, ssh, chargen, daytime
+conf t
+ no access-list 105
+ access-list 105 permit tcp any host cm eq 53
+ access-list 105 permit tcp any host cm eq 22
+ access-list 105 permit tcp any host cm eq 80
+ access-list 105 permit icmp any host cm2
+ access-list 105 permit tcp any host cm2 eq 23
+ access-list 105 permit tcp any host cm2 eq 22
+ access-list 105 permit tcp any host cm2 eq 19
+ access-list 105 permit tcp any host cm2 eq 13
+ int fa 0/0
+ ip access-group 105 in
+ do sh ip access-list 105
+
+conf t
+ int fa 0/0
+ no ip access-group 105 in
+ do sh ip access-list 105
+
+
+
+
+!policy 106 multiple hackers, multiple victims
+!p1 sccp-cm
+!p2 ping-cm, http
+!c1 ping-cm
+!c2 http-cm
+conf t
+ no access-list 106
+ access-list 106 permit tcp host p1 host cm eq 2000
+ access-list 106 permit icmp host p2 host cm
+ access-list 106 permit tcp host p2 host cm eq 80
+ access-list 106 permit icmp host c1 host cm
+ access-list 106 permit tcp host c2 host cm eq 80
+ int fa 0/0
+ ip access-group 106 in
+ do sh ip access-list 106
+
+conf t
+ int fa 0/0
+ no ip access-group 106 in
+ do sh ip access-list 106
+
+config t
+int fa 0/0
+ ip add 10.22.100.9 255.255.255.0 Secondary
+service finger
+service tcp-small-servers
+service udp-small-servers
+ip dns server
+ip http server
+ip http secure-server
+!Make Ping EASY
+ip host pc 10.22.1.10
+ip host cm 10.22.100.8
+ip host cm2 10.22.100.9
+ip host p1 10.22.100.101
+ip host p2 10.22.100.102
+ip host c1 10.22.50.6
+ip host c2 10.22.50.8
+ip host sw 10.22.1.4
+ip host ed 10.22.22.1
+
+
+
+
+
+
+!policy 107 multiple hackers, multiple victims
+!p1 ping, http cm
+!p2 sccp cm
+!c1 http cm
+!c2 ping cm
+conf t
+ no access-list 107
+ access-list 107 permit icmp host p1 host cm
+ access-list 107 permit tcp host p1 host cm eq 80
+ access-list 107 permit tcp host p2 host cm eq 2000
+ access-list 107 permit tcp host c1 host cm eq 80
+ access-list 107 permit icmp host c2 host cm
+ int fa 0/0
+ ip access-group 107 in
+ do sh ip access-list 107
+
+conf t
+ int fa 0/0
+ no ip access-group 107 in
+ do sh ip access-list 107
+
+
+
+
+
+
+!policy 108 multiple hackers, multiple victims
+!p1 ping, http cm
+!p2 ping, http cm
+!c1 ping, http cm
+!c2 ping cm
+conf t
+ no access-list 108
+ access-list 108 permit icmp host p1 host cm
+ access-list 108 permit icmp host p2 host cm
+ access-list 108 permit icmp host c1 host cm
+ access-list 108 permit icmp host c2 host cm
+ access-list 108 permit tcp host p1 host cm eq 80
+ access-list 108 permit tcp host p2 host cm eq 80
+ access-list 108 permit tcp host c1 host cm eq 80
+ int fa 0/0
+ ip access-group 108 in
+ do sh ip access-list 108
+
+conf t
+ int fa 0/0
+ no ip access-group 108 in
+ do sh ip access-list 108
+
+
+
+
+
+
+
+TASK 8: 
+
+EXAMLAB1: config basic ip add and dhcp srvr
+
+VPNJP:
+conf t
+ no logging console
+ no ip domain-lookup
+ int gi 1
+ ip add 192.168.108.5 255.255.255.0
+ no shut
+ int gi 2
+ ip add 172.16.100.5 255.255.255.0
+ no shut
+ int gi 3
+ ip add 10.103.1.5 255.255.255.0
+ no shut
+
+EXAMLAB1: DUAL DHCP SERVER
+@csr1000v
+conf t
+ip dhcp excluded-add 10.103.1.1 10.103.1.50
+ip dhcp excluded-add 172.16.100.1 172.16.100.80
+ip dhcp pool VM2
+ network 172.16.100.0 255.255.255.0
+ default-router 172.16.100.5
+ domain-name vm2.com
+ dns-server 1.1.1.1
+ip dhcp pool VM3
+ network 10.103.1.0 255.255.255.0
+ default-router 10.103.1.5
+ domain-name vm3.com
+ dns-server 1.1.1.1
+
+
+
+
+EXAMLAB2: SSH CONFIG
+telnet is dangerous/hackable
+
+conf t
+ip domain-name rivanit.com
+username admin2 privilege 15 secret password
+crypto key generate rsa
+!1024!
+ip ssh version 2
+
+
+
+
+EXAMLAB3: NETWORK TIME PROTOCOL (NTP)
+Syncs time with a known NTP server
+conf t
+ip route 0.0.0.0 0.0.0.0 192.168.108.2
+ip domain-lookup
+ip name-server 8.8.8.8
+ntp server time.google.com
+do sh ntp association
+
+
+
+
+EXAMLAB4: HOW TO CONFIG NETWORK ADDRESS TRANSLATION
+Static routing:
+inside local ---> outside local
+10.103.1.52  ---> 192.168.108.88
+172.16.100.81 --> 192.168.108.69
+!
+10.103.1.51  ---> default (?)
+172.16.100.82 --> default (?)
+
+config t
+access-list 8 permit 172.16.100.0 0.0.0.255
+access-list 8 permit 10.103.1.0 0.0.0.255
+int gi 2
+ ip nat inside
+int gi 3
+ ip nat inside
+int gi 1
+ ip nat outside
+ip nat inside source static 10.103.1.52  192.168.108.88
+ip nat inside source static 172.16.100.81  192.168.108.69
+ip nat inside source list 8 int gi 1 Overload
+end
+show ip nat translation
+
+
+
+
+
+CISCO PROGRAMMING USING EEM
